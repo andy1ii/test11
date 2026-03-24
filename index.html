@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cursor Creative Lab</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+</head>
+<body>
+
+  <div class="ui-panel top-left">
+    <img src="resources/CursorCreative.png" alt="Cursor Creative Lab" class="main-logo">
+    
+    <div class="custom-dropdown">
+      <button class="dropdown-toggle" id="bucket-toggle">
+        <span>Logo</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      
+      <ul class="dropdown-menu" id="bucket-menu">
+        <li class="active">Logo</li>
+        <li>Product UI</li>
+        <li>Editorial/ Blog</li>
+        <li>Social Media</li>
+        <li>Data Viz</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="ui-panel bottom-left">
+    <ul class="art-styles" id="art-styles-list">
+      <li>Noise Shader</li>
+      <li>Motion Blur</li>
+      <li>Mesh</li>
+      <li>Pen Plotter</li>
+      <li>Procedural</li>
+      <li>Line Art</li>
+      <li>Kinetic Type</li>
+      <li>3D WebGL</li>
+      <li>Raster/Matrix</li>
+      <li>ASCII</li>
+      <li>Flow Fields</li>
+      <li>Particle Systems</li>
+      <li>Generative Data Viz</li>
+    </ul>
+  </div>
+
+  <div class="ui-panel top-right">
+    <div class="controls-panel">
+      <div class="panel-header">Controls</div>
+      </div>
+  </div>
+
+  <div class="ui-panel bottom-right">
+    <button class="export-btn">Export</button>
+  </div>
+
+  <script src="cube.js"></script>
+  <script src="mesh.js"></script>
+  <script src="flow.js"></script>
+  <script src="lines.js"></script> 
+  <script src="shader.js"></script>
+  <script src="bio.js"></script>
+  
+  <script src="sketch.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // --- UI Elements ---
+      const toggleBtn = document.getElementById('bucket-toggle');
+      const toggleBtnText = toggleBtn.querySelector('span');
+      const dropdownMenu = document.getElementById('bucket-menu');
+      const dropdownItems = dropdownMenu.querySelectorAll('li');
+      
+      const artStylesList = document.getElementById('art-styles-list');
+      const controlsPanelContainer = document.querySelector('.top-right');
+      const exportPanelContainer = document.querySelector('.bottom-right');
+
+      // --- Category Mapping (UI Display filtering) ---
+      const categoryMapping = {
+        'Logo': [
+          'Noise Shader', 'Motion Blur', 'Mesh', 'Pen Plotter', 'Procedural', 'Line Art', 
+          'Kinetic Type', '3D WebGL', 'Raster/Matrix', 'ASCII', 
+          'Flow Fields', 'Particle Systems', 'Generative Data Viz'
+        ],
+        'Product UI': [
+          'Noise Shader', 'Motion Blur'
+        ],
+        'Editorial/ Blog': [
+          'Mesh', 'Pen Plotter', 'Procedural', 'Line Art'
+        ],
+        'Social Media': [
+          'Kinetic Type', '3D WebGL', 'Raster/Matrix', 'ASCII'
+        ],
+        'Data Viz': [
+          'Flow Fields', 'Particle Systems', 'Generative Data Viz'
+        ]
+      };
+
+      // --- Internal Mode Mapping (Maps UI text to setMode names) ---
+      const styleToMode = {
+        'Noise Shader': 'bio',
+        'Procedural': 'cube',
+        '3D WebGL': 'shader',
+        'Flow Fields': 'flow',
+        'Particle Systems': 'lines',
+        'ASCII': 'mesh' 
+      };
+
+      function renderArtStyles(category) {
+        const styles = categoryMapping[category] || categoryMapping['Logo'];
+        artStylesList.innerHTML = '';
+        styles.forEach(style => {
+          const li = document.createElement('li');
+          li.textContent = style;
+          artStylesList.appendChild(li);
+        });
+      }
+
+      // --- Dropdown Toggle Logic ---
+      toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); 
+        dropdownMenu.classList.toggle('show');
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!dropdownMenu.contains(e.target) && e.target !== toggleBtn) {
+          dropdownMenu.classList.remove('show');
+        }
+      });
+
+      // --- Dropdown Item Click Logic ---
+      dropdownItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+
+          dropdownItems.forEach(li => li.classList.remove('active'));
+          item.classList.add('active');
+          const selectedCategory = item.textContent.trim();
+          toggleBtnText.textContent = selectedCategory;
+
+          dropdownMenu.classList.remove('show');
+
+          controlsPanelContainer.style.display = 'none';
+          exportPanelContainer.style.display = 'none';
+          
+          if (selectedCategory === 'Logo') {
+            // BACK TO LOGO (Masked cycle)
+            // Pick up exactly where the cycle left off
+            if (typeof setMode === 'function') setMode(modes[currentModeIndex], false); 
+            if (typeof resumeCycle === 'function') resumeCycle();
+            renderArtStyles(selectedCategory);
+          } else {
+            // INTO A CATEGORY (Enable Whole Page mode for filtered list)
+            if (typeof pauseCycle === 'function') pauseCycle(); 
+            // Set to our new blank state!
+            if (typeof setMode === 'function') setMode('none', true); 
+            renderArtStyles(selectedCategory);
+          }
+        });
+      });
+
+      // --- Art Styles Click Logic (Using Event Delegation) ---
+      artStylesList.addEventListener('click', (e) => {
+        if (e.target.tagName === 'LI') {
+          const clickedItem = e.target;
+          const isActive = clickedItem.classList.contains('active');
+          const selectedText = clickedItem.textContent.trim();
+          
+          // Check what category we are currently in
+          const currentCategory = toggleBtnText.textContent.trim();
+          
+          // If we are NOT in the 'Logo' category, preserve the whole page mode
+          const shouldPreserveWholePage = (currentCategory !== 'Logo');
+
+          // Remove 'active' class from all list items currently in the DOM
+          const allItems = artStylesList.querySelectorAll('li');
+          allItems.forEach(li => li.classList.remove('active'));
+
+          if (isActive) {
+            // DESELECTED: Hide side panels, and reset view/cycling logic
+            controlsPanelContainer.style.display = 'none';
+            exportPanelContainer.style.display = 'none';
+            
+            if (currentCategory === 'Logo') {
+                if (typeof setMode === 'function') setMode(modes[currentModeIndex], false); // Revert to masked cycle
+                if (typeof resumeCycle === 'function') resumeCycle(); // Resume only if in Logo mode
+            } else {
+                // If we are in another category and deselect an effect, go back to blank
+                if (typeof setMode === 'function') setMode('none', true);
+            }
+            
+          } else {
+            // SELECTED: Show panels, switch canvas mode
+            clickedItem.classList.add('active');
+            controlsPanelContainer.style.display = 'block';
+            exportPanelContainer.style.display = 'block';
+            
+            const modeName = styleToMode[selectedText];
+            if (modeName && typeof setMode === 'function') {
+              if (typeof pauseCycle === 'function') pauseCycle(); // Always pause the timer
+              
+              // Switch mode, dynamically passing true (whole page) or false (logo mask) based on the current dropdown category
+              setMode(modeName, shouldPreserveWholePage); 
+            }
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>

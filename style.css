@@ -1,0 +1,268 @@
+/* Load Cursor Gothic (Main UI Font) */
+@font-face {
+  font-family: 'CursorGothic';
+  src: url('resources/CursorGothic-Regular.otf') format('opentype');
+}
+
+/* Load Cursor Mono (Bottom Left Menu Font) */
+@font-face {
+  font-family: 'CursorMono';
+  src: url('resources/CursorMono260219-Regular.otf') format('opentype');
+}
+
+/* --- THEME VARIABLES --- */
+:root {
+  --text-primary: #000000;
+  --text-hover: #555555;
+  
+  /* Light Glass - Base */
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(0, 0, 0, 0.15);
+  --glass-hover: rgba(255, 255, 255, 0.95);
+  --glass-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+
+  /* Light Glass - Active State (Slightly higher contrast) */
+  --glass-active-bg: rgba(255, 255, 255, 0.95); 
+  --glass-active-border: rgba(0, 0, 0, 0.25); 
+  --glass-active-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  
+  /* Menu Items */
+  --menu-hover-bg: rgba(0, 0, 0, 0.05);
+  --menu-active-bg: rgba(0, 0, 0, 0.1);
+}
+
+/* Applied dynamically via JavaScript for dark-background modes */
+body.dark-ui {
+  --text-primary: #FFFFFF;
+  --text-hover: #CCCCCC;
+  
+  /* Dark Glass - Base */
+  --glass-bg: rgba(20, 20, 20, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass-hover: rgba(40, 40, 40, 0.85);
+  --glass-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+
+  /* Dark Glass - Active State (Slightly higher contrast) */
+  --glass-active-bg: rgba(45, 45, 45, 0.85); 
+  --glass-active-border: rgba(255, 255, 255, 0.3); 
+  --glass-active-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+
+  /* Menu Items */
+  --menu-hover-bg: rgba(255, 255, 255, 0.1);
+  --menu-active-bg: rgba(255, 255, 255, 0.2);
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden; 
+  background-color: #EBEBE6; 
+  font-family: 'CursorGothic', 'Courier New', Courier, monospace;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
+}
+
+canvas {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0 !important; 
+}
+
+/* UI Panel Positioning */
+.ui-panel {
+  position: absolute;
+  z-index: 10;
+}
+
+/* Scaling all UI panels down by exactly half (0.5) and moved closer to the edge (20px). */
+.top-left { 
+  top: 20px; 
+  left: 20px; 
+  transform-origin: top left;
+  transform: scale(0.5);
+}
+
+.bottom-left { 
+  bottom: 20px; 
+  left: 20px; 
+  transform-origin: bottom left;
+  transform: scale(0.5);
+}
+
+.top-right { 
+  top: 20px; 
+  right: 20px; 
+  transform-origin: top right;
+  transform: scale(0.5);
+  display: none; /* Hidden by default until an art style is clicked */
+}
+
+.bottom-right { 
+  bottom: 20px; 
+  right: 20px; 
+  transform-origin: bottom right;
+  transform: scale(0.5);
+  display: none; /* Hidden by default until an art style is clicked */
+}
+
+/* --- Top Left Elements --- */
+.main-logo {
+  height: 45px; 
+  display: block;
+  margin-bottom: 30px;
+}
+
+/* Dropdown Container */
+.custom-dropdown {
+  position: relative;
+  width: 220px;
+}
+
+.dropdown-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text-primary);
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background 0.2s, color 0.3s, border 0.3s, box-shadow 0.3s;
+}
+
+.dropdown-toggle:hover {
+  background: var(--glass-hover);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 6px;
+  padding: 8px 0;
+  margin: 4px 0 0 0;
+  list-style: none;
+  display: none;
+  z-index: 20;
+  box-sizing: border-box;
+  transition: background 0.3s, border 0.3s, box-shadow 0.3s;
+}
+
+.dropdown-menu.show {
+  display: block;
+}
+
+.dropdown-menu li {
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: background 0.2s, color 0.2s;
+}
+
+.dropdown-menu li:hover {
+  background: var(--menu-hover-bg);
+}
+
+.dropdown-menu li.active {
+  background: var(--menu-active-bg);
+  border-radius: 4px;
+  margin: 0 8px; 
+  padding: 8px 8px;
+}
+
+/* --- Bottom Left Elements --- */
+.art-styles {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  /* Apply the new mono font strictly to this list */
+  font-family: 'CursorMono', monospace;
+}
+
+.art-styles li {
+  padding: 8px 12px;
+  margin-bottom: 4px;
+  font-size: 15px;
+  cursor: pointer;
+  color: var(--text-primary);
+  border-radius: 6px;
+  border: 1px solid transparent; 
+  transition: all 0.3s ease; 
+}
+
+.art-styles li:hover {
+  color: var(--text-hover);
+  background: var(--menu-hover-bg); 
+}
+
+.art-styles li.active {
+  background: var(--glass-active-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-active-border);
+  box-shadow: var(--glass-active-shadow);
+  text-decoration: none; 
+  color: var(--text-primary); 
+}
+
+/* --- Top Right Elements (Control Panel) --- */
+.controls-panel {
+  width: 250px;
+  height: calc(100vh - 160px); 
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 8px;
+  padding: 16px;
+  box-sizing: border-box;
+  color: var(--text-primary);
+  transition: background 0.3s, color 0.3s, border 0.3s, box-shadow 0.3s;
+}
+
+.panel-header {
+  font-size: 15px;
+  font-weight: normal;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+  transition: border 0.3s;
+}
+
+/* --- Bottom Right Elements --- */
+.export-btn {
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  padding: 8px 24px;
+  font-size: 14px;
+  border-radius: 8px; /* Matched to controls-panel */
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s, color 0.3s, border 0.3s, box-shadow 0.3s;
+}
+
+.export-btn:hover {
+  background: var(--glass-hover);
+}
