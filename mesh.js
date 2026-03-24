@@ -6,7 +6,7 @@ let logoScale = 1;
 let meshPg; // Graphics buffer re-use
 
 // --- DENSITY & DETAIL CONTROLS ---
-let baseGridSize = 9;            // Optimized for readability with the new scale
+let baseGridSize = 9;            
 let gridSize;                     
 let logoInternalDensity = 55;     
 let logoEdgeDensity = 70;         
@@ -22,7 +22,6 @@ function setupMesh() {
   textFont('CursorMono');
   rectMode(CENTER);
 
-  // Boundary: Re-use graphics buffer if it exists
   if (!meshPg) {
     meshPg = createGraphics(width, height);
     meshPg.pixelDensity(1);
@@ -41,7 +40,6 @@ function windowResizedMesh() {
 }
 
 function processMeshMask() {
-  // SAFEGUARD: Infinity/NaN check
   let imgW = max(logoImg.width, 1);
   let imgH = max(logoImg.height, 1);
 
@@ -50,10 +48,17 @@ function processMeshMask() {
   
   logoScale = max(baseScale, minScale);
 
-  gridSize = max(4, floor(baseGridSize * logoScale));
+  // PERFORMANCE OPTIMIZATION: 
+  // If whole page mode is active, increase the cell size (gridSize) by 1.6x. 
+  // Larger cells mean exponentially fewer calculations per frame, fixing the lag!
+  if (isWholePageMode) {
+    gridSize = max(8, floor(baseGridSize * logoScale * 1.6));
+  } else {
+    gridSize = max(4, floor(baseGridSize * logoScale));
+  }
 
   let hrW = floor(imgW * logoScale);
-  let hrH = floor(imgH * logoScale); // Fixed typo: changed scaleFactor to logoScale
+  let hrH = floor(imgH * logoScale); 
   let hrX = floor((width - hrW) / 2);
   let hrY = floor((height - hrH) / 2);
 
@@ -61,12 +66,10 @@ function processMeshMask() {
   meshMaskPixels = new Uint8Array(totalPixels);
 
   if (isWholePageMode) {
-    // WHOLE PAGE boundary logic: Treat entire page as valid mask
     for (let i = 0; i < totalPixels; i++) {
         meshMaskPixels[i] = 1;
     }
   } else {
-    // MASKED logic (existing)
     meshPg.clear();
     meshPg.background(0);
     meshPg.image(logoImg, hrX, hrY, hrW, hrH);
@@ -92,6 +95,10 @@ function buildCellData() {
     [-r, -r], [r, r], [-r, r], [r, -r]
   ];
   
+  // PERFORMANCE OPTIMIZATION:
+  // Drop the total density of printed characters slightly when in full screen.
+  let targetDensity = isWholePageMode ? 32 : logoInternalDensity;
+  
   for (let y = 0; y < meshRows; y++) {
     for (let x = 0; x < meshCols; x++) {
       let px = x * gridSize;
@@ -102,8 +109,6 @@ function buildCellData() {
       
       let inLogo = meshMaskPixels[safeX + safeY * width] === 1;
       
-      // Edge Score boundary logic handles canvas edges becausecx/cy constrain, 
-      // but mask pixel access is always safe, neighbor checks outside canvas will return 0.
       let edgeScore = 0;
       for (let i = 0; i < 8; i++) {
         let cx = constrain(px + offsets[i][0], 0, width - 1);
@@ -113,7 +118,7 @@ function buildCellData() {
       let nearEdge = (edgeScore > 0 && edgeScore < 8);
       
       let seed = (x * 37 + y * 83) % 100;
-      let renderGate = nearEdge ? logoEdgeDensity : (inLogo ? logoInternalDensity : backgroundDensity);
+      let renderGate = nearEdge ? logoEdgeDensity : (inLogo ? targetDensity : backgroundDensity);
       
       cellData.push({
         px: px, 
